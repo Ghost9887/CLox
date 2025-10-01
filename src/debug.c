@@ -13,14 +13,29 @@ static int constantInstruction(const char *name, Chunk *chunk, int offset){
   return offset + 2;
 }
 
+int getLine(Chunk *chunk, int instructionIndex) {
+  int offset = 0;
+  for (int i = 0; i < chunk->lineCount; i += 2) {
+    int line = chunk->lines[i];
+    int count = chunk->lines[i + 1];
+    if (instructionIndex < offset + count) {
+      return line;
+    }
+    offset += count;
+  }
+  return -1;
+}
+
+
 int disassembleInstruction(Chunk *chunk, int offset){
   printf("%04d ", offset);
 
   //show the line where a error happened
-  if(offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]){
+  int line = getLine(chunk, offset);
+  if(offset > 0 && line == getLine(chunk, offset - 1)){
     printf("  | ");
   }else{
-    printf("%4d ", chunk->lines[offset]);
+    printf("%4d ", line);
   }
 
   uint8_t instruction = chunk->code[offset];
@@ -37,7 +52,7 @@ int disassembleInstruction(Chunk *chunk, int offset){
 
 void disassembleChunk(Chunk *chunk, const char *name){
   printf("== %s ==\n", name);
-  for(int offset = 0; offset < chunk->count;){
+  for(int offset = 0; offset < chunk->count;){ //offset == chunk->code[offset];
     offset = disassembleInstruction(chunk, offset);
   }
 }
