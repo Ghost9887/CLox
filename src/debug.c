@@ -6,11 +6,21 @@ static int simpleInstruction(const char *name, int offset){
 }
 
 static int constantInstruction(const char *name, Chunk *chunk, int offset){
-  uint8_t constant = chunk->code[offset + 1];
+  uint8_t constant = chunk->code[offset + 1]; //stores the value after the constant declaration
+  printf("%-16s %4d '", name, constant);
+  printValue(chunk->constants.values[constant]); //uses the index of teh constant
+  printf("'\n");
+  return offset + 2; //uses two slots in the code array
+}
+
+static int constantLongInstruction(const char *name, Chunk *chunk, int offset){
+  uint32_t constant = chunk->code[offset + 1] |
+                     (chunk->code[offset + 2] << 8) |
+                     (chunk->code[offset + 3] << 16);
   printf("%-16s %4d '", name, constant);
   printValue(chunk->constants.values[constant]);
   printf("'\n");
-  return offset + 2;
+  return offset + 4;
 }
 
 int getLine(Chunk *chunk, int instructionIndex) {
@@ -44,6 +54,8 @@ int disassembleInstruction(Chunk *chunk, int offset){
       return simpleInstruction("OP_RETURN", offset);
     case OP_CONSTANT:
       return constantInstruction("OP_CONSTANT", chunk, offset);
+    case OP_CONSTANT_LONG:
+      return constantLongInstruction("OP_CONSTANT_LONG", chunk, offset);
     default:
       printf("Uknown opcode %d\n", instruction);
       return offset + 1;
